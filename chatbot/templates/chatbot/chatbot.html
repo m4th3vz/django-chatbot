@@ -65,6 +65,13 @@
         }
     }
 
+    // Exibe a mensagem inicial automaticamente ao carregar a página
+    window.onload = function() {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML += `<p><strong>Bot:</strong> Olá! Como posso ajudá-lo hoje com suas finanças?</p>`;
+        chatBox.scrollTop = chatBox.scrollHeight; // Rola para baixo automaticamente
+    };
+
     // Ouvinte do clique no botão "Enviar"
     document.getElementById("sendMessage").onclick = sendMessage;
 
@@ -76,5 +83,6 @@
         }
     });
 </script>
+
 </body>
 </html>

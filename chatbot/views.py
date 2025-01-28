@@ -1,15 +1,23 @@
-from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
 import google.generativeai as genai
 from django.views.generic import TemplateView
+from decouple import config
 
 # Página principal
 class ChatbotView(TemplateView):
     template_name = 'chatbot/chatbot.html'
 
-# Configure o modelo
-genai.configure(api_key="")
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Mensagem inicial que será exibida no front-end
+        context['initial_message'] = "Olá! Como posso ajudá-lo hoje com suas finanças?"
+        return context
+
+
+# Configure o modelo usando a chave da variável de ambiente
+api_key = config("GEMINI_API_KEY")
+genai.configure(api_key=api_key)
 
 generation_config = {
     "temperature": 0,
@@ -40,7 +48,12 @@ model = genai.GenerativeModel(
 )
 
 class ChatbotAPI(View):
-    chat_session = model.start_chat(history=[])
+    # Histórico inicial com a mensagem de abertura
+    chat_session = model.start_chat(
+        history=[
+            {"role": "model", "parts": ["Olá! Como posso ajudá-lo hoje com suas finanças?"]}
+        ]
+    )
 
     def post(self, request, *args, **kwargs):
         import json
@@ -53,9 +66,8 @@ class ChatbotAPI(View):
         response = self.chat_session.send_message(user_input)
         model_response = response.text
 
-        # Adiciona histórico (opcional, pode persistir em um banco de dados no futuro)
+        # Adiciona histórico
         self.chat_session.history.append({"role": "user", "parts": [user_input]})
         self.chat_session.history.append({"role": "model", "parts": [model_response]})
 
         return JsonResponse({"response": model_response})
-
